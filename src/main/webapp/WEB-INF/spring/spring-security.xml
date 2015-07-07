@@ -1,0 +1,83 @@
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.2.xsd
+		">
+		
+	<global-method-security secured-annotations="enabled" />
+		
+	<http pattern="/a/login" security="none" />
+	<http pattern="/a/loginError" security="none" />
+	<http pattern="/a/denied" security="none" />
+	<http pattern="/api/user" security="none" />
+	<http pattern="/resources/**" security='none' />
+	<http pattern="/a/newlogin" security='none' />
+	
+	<http pattern="/app/login" security='none' />
+<!-- 	<http pattern="/app/user/**" security='none' /> -->
+	
+	<http pattern="/app/**" 
+		auto-config="true" 
+		use-expressions="true" 
+		entry-point-ref="ajaxAuthenticationEntryPoint" 
+		authentication-manager-ref="serviceAuthenticationManager">
+		
+		
+		<form-login authentication-failure-handler-ref="ajaxAuthenticationFailureHandler" />
+		<access-denied-handler ref="ajaxAccessDeniedHandler" />
+		
+		<logout logout-success-url="/index.html" delete-cookies="JSESSIONID,SPRING_SECURITY_REMEMBER_ME_COOKIE" />
+	</http>
+	
+	<!-- Admin URLs -->
+	<http pattern="/a/**" 
+		auto-config="true" 
+		use-expressions="true" 
+		access-denied-page="/a/denied"
+		authentication-manager-ref="serviceMongoAuthenticationManager">
+		
+		<intercept-url pattern="/a/user" access="isFullyAuthenticated()" />
+		<intercept-url pattern="/a/product" access="isFullyAuthenticated()" />
+		<intercept-url pattern="/a/institution" access="isFullyAuthenticated()" />
+		<intercept-url pattern="/a/department" access="isFullyAuthenticated()" />
+		<intercept-url pattern="/a/promotion" access="isFullyAuthenticated()" />
+		<intercept-url pattern="/a/orders" access="isFullyAuthenticated()" />
+		<intercept-url pattern="/a/managecontent" access="isFullyAuthenticated()" />
+  	
+    	<form-login login-page="/a/login" 
+			authentication-failure-url="/a/loginError"
+			default-target-url='/a/home'
+			username-parameter="username"
+			password-parameter="password"/>
+		
+		<logout logout-success-url="/a/login" delete-cookies="JSESSIONID" />
+	</http>
+	
+	<http pattern="/**" 
+		auto-config="true" 
+		use-expressions="true" 
+		authentication-manager-ref="serviceMongoAuthenticationManager">
+		
+		<intercept-url pattern="/**" access="isAnonymous() or isAuthenticated()"/>
+		
+		<form-login login-page="/a/login" 
+			authentication-failure-url="/a/loginError"
+			default-target-url='/a/home'
+			username-parameter="username"
+			password-parameter="password"/>
+		
+		<logout logout-success-url="/a/login" delete-cookies="JSESSIONID" />
+	</http>
+	
+	<authentication-manager id="serviceAuthenticationManager">
+		<authentication-provider ref="serviceAuthenticationProvider">
+		</authentication-provider>
+	</authentication-manager>
+	
+	<authentication-manager id="serviceMongoAuthenticationManager">
+		<authentication-provider ref="serviceMongoAuthenticationProvider">
+		</authentication-provider>
+	</authentication-manager>
+	
+</beans:beans>
